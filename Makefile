@@ -47,6 +47,7 @@ distclean: clean
 
 results:
 	Rscript --vanilla priv/summary.r -i tests/current
+	eog tests/current/summary.png
 
 ops_sec-results: results
 
