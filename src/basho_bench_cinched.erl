@@ -75,13 +75,13 @@ new(_Id) ->
    [
     {encrypt_blob,#url{host=IP,port=Port,path="/blob/encrypt"}},
     {encrypt_doc,#url{host=IP,port=Port,path="/doc/encrypt?"++FieldQuery}},
-    {decrypt,#url{host=IP,port=Port,path="/doc/decrypt?"++FieldQuery}},
+    {decrypt_doc,#url{host=IP,port=Port,path="/doc/decrypt?"++FieldQuery}},
     {data_key,#url{host=IP,port=Port,path="/key/data-key"}}
    ] || {IP,Port} <- Targets
   ],
 
   Options = basho_bench_config:get(options),
-  RequestTimeout = basho_bench_config:get(http_raw_request_timeout, 5000),
+  RequestTimeout = basho_bench_config:get(http_raw_request_timeout, 50000),
 
     {ok, #state {
             opt_targets = Urls,
@@ -103,7 +103,7 @@ next_host(State) ->
 
 run(encrypt_blob,_KeyGen,_ValueGen,State0=#state{opt_doc=Doc}) ->
   {Target,State1} = next_host(State0),
-  Url = proplists:lookup(encrypt_blob,Target),
+  Url = proplists:get_value(encrypt_blob,Target),
   case do_post(
     Url,
     [
@@ -121,7 +121,7 @@ run(encrypt_blob,_KeyGen,_ValueGen,State0=#state{opt_doc=Doc}) ->
 
 run(encrypt_doc,_KeyGen,_ValueGen,State0=#state{opt_doc=Doc}) ->
   {Target,State1} = next_host(State0),
-  Url = proplists:lookup(encrypt_doc,Target),
+  Url = proplists:get_value(encrypt_doc,Target),
   case do_post(
     Url,
     [{'Content-Type', 'application/json'},{'Accept', 'application/json'}],
@@ -136,7 +136,7 @@ run(encrypt_doc,_KeyGen,_ValueGen,State0=#state{opt_doc=Doc}) ->
 
 run(decrypt_doc,_KeyGen,_ValueGen,State0=#state{opt_encrypted_doc=Doc,opt_data_key=DK}) ->
   {Target,State1} = next_host(State0),
-  Url = proplists:lookup(decrypt_doc,Target),
+  Url = proplists:get_value(decrypt_doc,Target),
   case do_post(
     Url,
     [
@@ -217,7 +217,6 @@ send_request(Url, Headers, Method, Body, Options, Count, S) ->
             {ok, Status, RespHeaders, RespBody};
         Error ->
             lager:debug("Error : ~p",[Error]),
-            disconnect(Url),
             case should_retry(Error) of
                 true ->
                     send_request(Url, Headers, Method, Body, Options, Count-1, S);
