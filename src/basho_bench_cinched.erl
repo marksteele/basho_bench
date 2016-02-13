@@ -169,8 +169,7 @@ run(data_key,_KeyGen,_ValueGen,State0) ->
   end.
 
 do_post(Url, Headers, Value, S) ->
-    case send_request(Url, Headers,
-                      post, Value, [{response_format, binary}], S) of
+    case send_request(Url, Headers,post, Value, [{response_format, binary}], S) of
         {ok, "200", _Header, _Body} ->
             ok;
         {ok, Code, _Header, _Body} ->
